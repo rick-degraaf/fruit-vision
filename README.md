@@ -2,8 +2,7 @@
 
 This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8** object detection model on a custom dataset inside a containerized development environment.
 
-![Model Predictions with Bounding Boxes](assets/no-label.jpeg)
-*(Note: Replace `assets/bbox_placeholder.png` with an actual inference image showcasing detected bounding boxes.)*
+![Model Predictions with Bounding Boxes](assets/label.jpeg)
 
 ---
 
@@ -26,7 +25,6 @@ This project uses a VS Code Dev Container to automatically configure all depende
    ```bash
    git clone https://github.com/your-username/yolo-finetune-vision.git
    cd yolo-finetune-vision
-   code .
    ```
 
 2. Open the VS Code Command Palette (`Ctrl + Shift + P` or `Cmd + Shift + P`).
@@ -50,24 +48,63 @@ To fine-tune the YOLOv8 model, you need a labeled image dataset formatted specif
 | **Labelled Image** | ![Scene 1 Labelled](assets/scene_1_labelled.jpeg) | ![Scene 2 Labelled](assets/scene_2_labelled.jpeg) | ![Scene 3 Labelled](assets/scene_3_labelled.jpeg) | ![Scene 4 Labelled](assets/scene_4_labelled.jpeg) |
 
 ### 1. Labeling Your Images
-Annotate your custom images with bounding boxes. You can do this manually using local tools (e.g., LabelImg, CVAT) or via cloud platforms like [Roboflow](https://roboflow.com/). Export your annotations in **YOLOv8 format** (`.txt` files containing `<class_id> <x_center> <y_center> <width> <height>`).
+Annotate your custom images with bounding boxes. You can do this manually using local tools (e.g., LabelImg, CVAT) or via cloud platforms like [Roboflow](https://roboflow.com/). Export your annotations in **YOLOv8 format** (`.txt` files containing `<class_id> <x_center> <y_center> <width> <height>`, with dimensions normalized by image width and height from 0-1).
 
-### 2. Directory Structure & Splitting
-To ensure an unbiased and fair evaluation of your model's performance, we split the dataset into `train`, `val`, and `test` sets (e.g., a 70% / 20% / 10% split). 
+### 2. Directory Structure & Dataset Splitting
 
-Place your organized dataset inside the `/data` directory following this structure:
+To ensure a fair and unbiased evaluation of the model, the dataset is divided into three subsets: **training**, **validation**, and **testing**.
+
+Rather than performing a purely random split, this project uses a **scene-based split** to evaluate how well the model generalizes to different environments and lighting conditions.
+
+First, place your original dataset inside the `/data` directory, following this structure:
 
 ```text
 data/
 ├── data.yaml
-├── train/
-│   ├── images/
-│   └── labels/
+└── train/
+    ├── images/
+    └── labels/
 ```
 
-After this we split it into train / val / test
+The `images/` directory should contain the original images, while `labels/` should contain their corresponding YOLO-format annotation files.
 
+Once the dataset is organized, run the splitting script from the project root:
 
+```bash
+python utils/generate_split.py \
+    --images_path /app/data/train/images \
+    --labels_path /app/data/train/labels \
+    --target_dir /app/data
+```
+
+**Scene-based splitting strategy**
+
+For this project, images are grouped according to their original scene:
+
+- **Training:** Scenes 1 and 3, used to train the model.
+- **Validation:** Scene 2, used to monitor model performance and guide training.
+- **Testing:** Scene 4, reserved for evaluating generalization under different lighting conditions (dark-room environment).
+
+This approach helps assess whether the model can generalize to previously unseen scenes rather than simply memorizing the conditions present in the training data.
+
+After running the script, the dataset should follow this structure:
+
+```text
+data/
+├── data.yaml
+├── images/
+│   ├── train/
+│   ├── val/
+│   └── test/
+└── labels/
+    ├── train/
+    ├── val/
+    └── test/
+```
+
+Finally, make sure that the paths specified in `data.yaml` match the generated directory structure and that the class IDs and class names are correctly mapped.
+
+> **Note:** Keep the test set separate from the training and validation processes. It should only be used for the final evaluation to provide an unbiased estimate of the model's generalization performance.
 ---
 
 ## Training 
@@ -75,3 +112,4 @@ After this we split it into train / val / test
 
 
 ## Evaluation & Analysis
+
