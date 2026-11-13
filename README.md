@@ -1,4 +1,4 @@
-# yolo-finetune-vision
+# Fruit-Vision
 
 This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8** object detection model on a custom dataset inside a containerized development environment.
 
