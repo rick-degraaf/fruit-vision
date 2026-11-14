@@ -1,8 +1,8 @@
 // .devcontainer/devcontainer.json
 {
-  "name": "Yolo Finetune Vision",
+  "name": "fruit-vision",
   "dockerComposeFile": "../docker/docker-compose.yml",
-  "service": "yolo-vision",
+  "service": "fruit-vision",
   "workspaceFolder": "/app",
 
   "postCreateCommand": "bash docker/entrypoint.sh",

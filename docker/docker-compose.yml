@@ -1,6 +1,6 @@
 # docker/docker-compose.yml
 services:
-  yolo-vision:
+  fruit-vision:
     shm_size: "8gb"
     build:
       context: ..
