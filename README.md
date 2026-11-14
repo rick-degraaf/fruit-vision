@@ -6,7 +6,7 @@ This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8**
 
 ---
 
-## 📋 Prerequisites
+## 0. Prerequisites
 
 Before getting started, ensure your system meets the following requirements to support GUI/X11 forwarding and GPU-accelerated Docker containers:
 
@@ -17,7 +17,7 @@ Before getting started, ensure your system meets the following requirements to s
 
 ---
 
-## Environment Setup
+## 1. Environment Setup
 
 This project uses a VS Code Dev Container to automatically configure all dependencies, CUDA drivers, and Ultralytics packages.
 
@@ -36,7 +36,7 @@ This project uses a VS Code Dev Container to automatically configure all depende
 
 ---
 
-## Dataset Preparation
+## 2. Dataset Preparation
 
 To fine-tune the YOLOv8 model, you need a labeled image dataset formatted specifically for YOLO.
 
@@ -47,10 +47,10 @@ To fine-tune the YOLOv8 model, you need a labeled image dataset formatted specif
 | **Original Image** | ![Scene 1](assets/scene_1.jpeg) | ![Scene 2](assets/scene_2.jpeg) | ![Scene 3](assets/scene_3.jpeg) | ![Scene 4](assets/scene_4.jpeg) |
 | **Labelled Image** | ![Scene 1 Labelled](assets/scene_1_labelled.jpeg) | ![Scene 2 Labelled](assets/scene_2_labelled.jpeg) | ![Scene 3 Labelled](assets/scene_3_labelled.jpeg) | ![Scene 4 Labelled](assets/scene_4_labelled.jpeg) |
 
-### 1. Labeling Your Images
+### 2.1 Labeling Your Images
 Annotate your custom images with bounding boxes. You can do this manually using local tools (e.g., LabelImg, CVAT) or via cloud platforms like [Roboflow](https://roboflow.com/). Export your annotations in **YOLOv8 format** (`.txt` files containing `<class_id> <x_center> <y_center> <width> <height>`, with dimensions normalized by image width and height from 0-1).
 
-### 2. Directory Structure & Dataset Splitting
+### 2.2 Directory Structure & Dataset Splitting
 
 To ensure a fair and unbiased evaluation of the model, the dataset is divided into three subsets: **training**, **validation**, and **testing**.
 
@@ -107,9 +107,9 @@ Finally, make sure that the paths specified in `data.yaml` match the generated d
 > **Note:** Keep the test set separate from the training and validation processes. It should only be used for the final evaluation to provide an unbiased estimate of the model's generalization performance.
 ---
 
-## Training 
+## 3. Training 
 
 
 
-## Evaluation & Analysis
+## 4. Evaluation & Analysis
 
