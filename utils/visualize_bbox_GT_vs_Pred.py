@@ -15,10 +15,12 @@ colors = [
 ]
 
 
-def plot_bbox(image, label_path):
+def plot_bbox(image, label_path, conf_threshold=0.0):
     """
     Draw YOLO bounding boxes on an image.
-    Keeps the original plotting style and colors.
+
+    Predictions below the confidence threshold are ignored.
+    Ground-truth labels are always displayed.
     """
 
     h, w, _ = image.shape
@@ -35,7 +37,11 @@ def plot_bbox(image, label_path):
                 continue
 
             c, x_center, y_center, width, height = values[:5]
-            confidence = values[5] if len(values) > 5 else None
+            confidence = float(values[5]) if len(values) > 5 else None
+
+            # Apply confidence filter to predictions only
+            if confidence is not None and confidence < conf_threshold:
+                continue
 
             c = int(c)
 
@@ -79,7 +85,7 @@ def plot_bbox(image, label_path):
 
             # Confidence at top-right (predictions only)
             if confidence is not None:
-                conf_label = f"Conf: {float(confidence):.3f}"
+                conf_label = f"Conf: {confidence:.3f}"
 
                 (text_width, text_height), _ = cv2.getTextSize(
                     conf_label,
@@ -100,7 +106,14 @@ def plot_bbox(image, label_path):
     return image
 
 
-def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
+def visualize_dataset(
+    image_dir,
+    gt_dir,
+    pred_dir,
+    output_dir,
+    conf_threshold=0.0,
+    single_image=None
+):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -110,6 +123,17 @@ def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
         p for p in Path(image_dir).iterdir()
         if p.suffix.lower() in image_extensions
     ])
+
+    # Process only one selected image if requested
+    if single_image:
+        image_paths = [
+            p for p in image_paths
+            if p.name == single_image
+        ]
+
+        if not image_paths:
+            print(f"Image not found: {single_image}")
+            return
 
     if not image_paths:
         print("No images found!")
@@ -133,9 +157,14 @@ def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
         gt_image = original.copy()
         pred_image = original.copy()
 
-        # Draw GT and Pred bounding boxes
+        # Draw GT and prediction bounding boxes
         gt_image = plot_bbox(gt_image, gt_path)
-        pred_image = plot_bbox(pred_image, pred_path)
+
+        pred_image = plot_bbox(
+            pred_image,
+            pred_path,
+            conf_threshold=conf_threshold
+        )
 
         # Add titles
         cv2.putText(
@@ -146,10 +175,11 @@ def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
         )
 
         cv2.putText(
-            pred_image, "Predictions",
+            pred_image,
+            f"Predictions (conf >= {conf_threshold:.2f})",
             (20, 40),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1.2, (255, 255, 255), 3
+            1.0, (255, 255, 255), 3
         )
 
         # Side-by-side visualization
@@ -157,14 +187,16 @@ def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
 
         # Display at half resolution
         resized = cv2.resize(
-            combined, None,
-            fx=0.5, fy=0.5
+            combined,
+            None,
+            fx=0.5,
+            fy=0.5
         )
 
-
-        # Save visualization
+        # Save full-resolution visualization
         output_path = os.path.join(
-            output_dir, image_name + "_comparison.jpg"
+            output_dir,
+            image_name + "_comparison.jpg"
         )
 
         cv2.imwrite(output_path, combined)
@@ -173,6 +205,9 @@ def visualize_dataset(image_dir, gt_dir, pred_dir, output_dir):
             f"[{idx + 1}/{len(image_paths)}] "
             f"Saved: {output_path}"
         )
+
+        # Display visualization
+        cv2.imshow("Ground Truth vs Predictions", resized)
 
         # Press any key for next image, ESC to exit
         key = cv2.waitKey(0)
@@ -190,30 +225,53 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--image_dir", required=True,
+        "--image_dir",
+        required=True,
         help="Folder containing images"
     )
 
     parser.add_argument(
-        "--gt_dir", required=True,
+        "--gt_dir",
+        required=True,
         help="Folder containing ground truth labels"
     )
 
     parser.add_argument(
-        "--pred_dir", required=True,
+        "--pred_dir",
+        required=True,
         help="Folder containing predicted labels"
     )
 
     parser.add_argument(
-        "--output_dir", required=True,
+        "--output_dir",
+        required=True,
         help="Folder to save comparison visualizations"
     )
 
+    parser.add_argument(
+        "--conf",
+        type=float,
+        default=0.0,
+        help="Minimum prediction confidence threshold (default: 0.0)"
+    )
+
+    parser.add_argument(
+        "--image",
+        type=str,
+        default=None,
+        help="Process only one image, e.g. scene_4_01.jpg"
+    )
+
     args = parser.parse_args()
+
+    if not 0.0 <= args.conf <= 1.0:
+        parser.error("--conf must be between 0.0 and 1.0")
 
     visualize_dataset(
         args.image_dir,
         args.gt_dir,
         args.pred_dir,
-        args.output_dir
+        args.output_dir,
+        conf_threshold=args.conf,
+        single_image=args.image
     )

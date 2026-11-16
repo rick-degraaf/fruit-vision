@@ -150,3 +150,39 @@ At a confidence threshold of `0.25` and an IoU threshold of `0.5`, the model ach
 The PR curves show how detection performance changes as the IoU threshold increases. The decrease in AP at stricter thresholds indicates that the predicted bounding boxes are less consistently aligned with the ground-truth annotations when a higher overlap is required.
 
 For the full evaluation procedure, metric calculations and detailed results, see [Model Evaluation](docs/evaluation.md).
+
+## 6. Model Testing
+
+After completing the validation evaluation, the trained model is evaluated on the separate test set (Scene 4). These images were not used during training or validation and contain a different lighting environment.
+
+The purpose of this final evaluation is to assess how well the model generalizes to an unseen scene.
+
+### Test Results
+
+The custom evaluation implementation produced the following results on the test set, consisting of 65 images:
+
+| Metric | Result |
+|---|---:|
+| mAP@0.5 | 0.8202 |
+| mAP@0.5:0.95 | 0.7701 |
+
+### Ground Truth vs. Predictions
+
+![Test Ground Truth vs Predictions](assets/S4_254_comparison.jpg)
+
+This visualization compares the ground-truth bounding boxes with the model's predictions on an image from the unseen test scene. It provides an example of how the model performs under different lighting conditions.
+
+### Validation vs. Test Performance
+
+Comparing the validation and test results provides insight into how well the model generalizes to unseen data.
+
+| Metric | Validation (Scene 2) | Test (Scene 4) | Difference |
+|---|---:|---:|---:|
+| mAP@0.5 | 0.9635 | 0.8202 | -0.1433 |
+| mAP@0.5:0.95 | ~0.8800 | 0.7701 | ~-0.1099 |
+
+The model achieves lower mAP on the test set compared with the validation set. This indicates a drop in detection performance when evaluated on the unseen scene.
+
+The different lighting conditions may contribute to this difference. Nevertheless, the model achieves an mAP@0.5 of 0.8202 on the test set, showing that it can still detect fruit in an environment it has not encountered during training or validation.
+
+Overall, the comparison highlights the importance of evaluating object-detection models on unseen data rather than relying solely on validation performance.
