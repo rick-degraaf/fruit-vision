@@ -10,7 +10,7 @@ This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8**
 
 ---
 
-## 1. Project Pipeline & Documentation
+## Project Pipeline & Documentation
 
 The project covers the complete object-detection workflow, from setting up the development environment to evaluating the trained model.
 
@@ -19,9 +19,9 @@ The project covers the complete object-detection workflow, from setting up the d
 | **Installation** | Set up the development environment using WSL2, Docker and VS Code Dev Containers. | [Installation](docs/installation.md) |
 | **Dataset Labelling & Preparation** | Annotate images in YOLO format, organize the dataset and perform a scene-based split. | [Dataset Preparation](docs/dataset-preparation.md) |
 | **Model Training & Inference** | Fine-tune the pretrained YOLOv8n model and generate predictions on the validation set. | [Model Training](docs/training.md) · [Inference](docs/inference.md) |
-| **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) |
+| **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) · [Model Testing](docs/testing.md) |
 
-## 2. Getting Started
+## 0. Getting Started
 
 Clone the repository and open it in Visual Studio Code:
 
@@ -40,7 +40,7 @@ The development container automatically configures the required dependencies and
 
 For the prerequisites and full installation instructions, see the [Installation Guide](docs/installation.md).
 
-## 3. Dataset Labelling & Preparation
+## 1. Dataset Labelling & Preparation
 
 The first step is to annotate the fruit images with bounding boxes and export the annotations in YOLO format.
 
@@ -63,7 +63,7 @@ This allows the model to be evaluated on a previously unseen scene with differen
 
 For more information about the annotation format, dataset structure and splitting process, see [Dataset Preparation](docs/dataset-preparation.md).
 
-## 4. Model Training & Inference
+## 2. Model Training & Inference
 
 The model used in this project is **YOLOv8n**, initialized with pretrained weights and fine-tuned on the custom five-class fruit dataset.
 
@@ -110,9 +110,9 @@ The generated prediction files are saved under `/app/runs/val_preds/`.
 
 For more information about inference settings and prediction outputs, see [Inference](docs/inference.md).
 
-## 5. Model Evaluation
+## 3. Model Evaluation
 
-The model is evaluated by comparing its predictions against the ground-truth annotations on the validation set (Scene 2). The test set (Scene 4) remains separate and is reserved for the final evaluation.
+The model is evaluated by comparing its predictions against the ground-truth annotations on the validation set (Scene 2). The separate test set (Scene 4) is not used during validation and is evaluated independently in the final testing stage.
 
 The custom evaluation implementation calculates precision, recall, F1 score, Average Precision (AP) and mean Average Precision (mAP).
 
@@ -151,7 +151,7 @@ The PR curves show how detection performance changes as the IoU threshold increa
 
 For the full evaluation procedure, metric calculations and detailed results, see [Model Evaluation](docs/evaluation.md).
 
-## 6. Model Testing
+## 4. Model Testing
 
 After completing the validation evaluation, the trained model is evaluated on the separate test set (Scene 4). These images were not used during training or validation and contain a different lighting environment.
 
