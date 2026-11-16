@@ -10,7 +10,7 @@ This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8**
 
 ---
 
-## 1. Project Pipeline & Documentation
+## Project Pipeline & Documentation
 
 The project covers the complete object-detection workflow, from setting up the development environment to evaluating the trained model.
 
@@ -21,7 +21,7 @@ The project covers the complete object-detection workflow, from setting up the d
 | **Model Training & Inference** | Fine-tune the pretrained YOLOv8n model and generate predictions on the validation set. | [Model Training](docs/training.md) · [Inference](docs/inference.md) |
 | **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) |
 
-## 2. Getting Started
+## 0. Getting Started
 
 Clone the repository and open it in Visual Studio Code:
 
@@ -40,7 +40,7 @@ The development container automatically configures the required dependencies and
 
 For the prerequisites and full installation instructions, see the [Installation Guide](docs/installation.md).
 
-## 3. Dataset Labelling & Preparation
+## 1. Dataset Labelling & Preparation
 
 The first step is to annotate the fruit images with bounding boxes and export the annotations in YOLO format.
 
@@ -63,7 +63,7 @@ This allows the model to be evaluated on a previously unseen scene with differen
 
 For more information about the annotation format, dataset structure and splitting process, see [Dataset Preparation](docs/dataset-preparation.md).
 
-## 4. Model Training & Inference
+## 2. Model Training & Inference
 
 The model used in this project is **YOLOv8n**, initialized with pretrained weights and fine-tuned on the custom five-class fruit dataset.
 
@@ -110,7 +110,7 @@ The generated prediction files are saved under `/app/runs/val_preds/`.
 
 For more information about inference settings and prediction outputs, see [Inference](docs/inference.md).
 
-## 5. Model Evaluation
+## 3. Model Evaluation
 
 The model is evaluated by comparing its predictions against the ground-truth annotations on the validation set (Scene 2). The test set (Scene 4) remains separate and is reserved for the final evaluation.
 
@@ -133,7 +133,9 @@ The visualization compares the ground-truth bounding boxes with the model's pred
 
 ### Precision-Recall Curve
 
-![Precision-Recall Curve for Class 0 at IoU 0.5](assets/PR_curve.png)
+| Precision-Recall Curve | Localization Performance |
+|:---:|:---:|
+| <img src="assets/PR_curve.png" height="300"> | <img src="assets/class_0_pr_curves.png" height="300"> |
 
 The PR curve for class 0 (Banana) shows the relationship between precision and recall at different confidence thresholds.
 
@@ -144,8 +146,6 @@ At a confidence threshold of `0.25` and an IoU threshold of `0.5`, the model ach
 - **F1 score:** 0.9268
 
 ### Localization Performance
-
-![Class 0 Banana Precision-Recall Curves at 10 IoU Thresholds](assets/class_0_pr_curves.png)
 
 The PR curves show how detection performance changes as the IoU threshold increases. The decrease in AP at stricter thresholds indicates that the predicted bounding boxes are less consistently aligned with the ground-truth annotations when a higher overlap is required.
 
