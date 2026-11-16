@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument("--conf", type=float, default=0.001)
     parser.add_argument('--save_txt', action='store_true', default=False)
     parser.add_argument('--save_conf', action='store_true', default=False)
-    parser.add_argument("--project", type=str, default="runs")
+    parser.add_argument("--project", type=str, default="/app/runs")
     parser.add_argument("--name", type=str, default="val_preds")
 
     return parser.parse_args()

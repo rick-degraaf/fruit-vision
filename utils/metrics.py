@@ -1,21 +1,45 @@
 import numpy as np
 
 def iou(boxA, boxB):
-    """ Calculates iou value (0-1) of Bounding Boxes A & B in Corner Format [x1, y1, x2, y2]"""
+    """
+    Calculates IoU (0-1) between two YOLO-format bounding boxes.
+    Format: [class, x_center, y_center, width, height]
+    """
 
-    x_min_a, y_min_a, x_max_a, y_max_a = boxA[0], boxA[1], boxA[2], boxA[3]
-    x_min_b, y_min_b, x_max_b, y_max_b = boxB[0], boxB[1], boxB[2], boxB[3]
+    # Extract YOLO coordinates
+    xA, yA, wA, hA = boxA[1:5]
+    xB, yB, wB, hB = boxB[1:5]
 
-    areaA = (x_max_a - x_min_a) * (y_max_a - y_min_a)   
-    areaB = (x_max_b - x_min_b) * (y_max_b - y_min_b)
+    # Convert box A to corner format
+    x_min_a = xA - wA / 2
+    y_min_a = yA - hA / 2
+    x_max_a = xA + wA / 2
+    y_max_a = yA + hA / 2
 
+    # Convert box B to corner format
+    x_min_b = xB - wB / 2
+    y_min_b = yB - hB / 2
+    x_max_b = xB + wB / 2
+    y_max_b = yB + hB / 2
+
+    # Calculate individual areas
+    areaA = wA * hA
+    areaB = wB * hB
+
+    # Calculate intersection
     x_overlap = max(0, min(x_max_a, x_max_b) - max(x_min_a, x_min_b))
     y_overlap = max(0, min(y_max_a, y_max_b) - max(y_min_a, y_min_b))
-    overlap = x_overlap * y_overlap
-    union = areaA + areaB - overlap
-    iou_metric = overlap / union
 
-    return iou_metric
+    intersection = x_overlap * y_overlap
+
+    # Calculate union
+    union = areaA + areaB - intersection
+
+    # Avoid division by zero
+    if union <= 0:
+        return 0.0
+
+    return intersection / union
 
 def nms(boxes, scores, thr):
     """Determine box indices to keep based on confidence scores and IoU threshold."""
