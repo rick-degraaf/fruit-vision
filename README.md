@@ -10,7 +10,7 @@ This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8**
 
 ---
 
-## Project Pipeline & Documentation
+## 1. Project Pipeline & Documentation
 
 The project covers the complete object-detection workflow, from setting up the development environment to evaluating the trained model.
 
@@ -21,7 +21,7 @@ The project covers the complete object-detection workflow, from setting up the d
 | **Model Training & Inference** | Fine-tune the pretrained YOLOv8n model and generate predictions on the validation set. | [Model Training](docs/training.md) · [Inference](docs/inference.md) |
 | **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) |
 
-## 0. Getting Started
+## 2. Getting Started
 
 Clone the repository and open it in Visual Studio Code:
 
@@ -40,7 +40,7 @@ The development container automatically configures the required dependencies and
 
 For the prerequisites and full installation instructions, see the [Installation Guide](docs/installation.md).
 
-## 1. Dataset Labelling & Preparation
+## 3. Dataset Labelling & Preparation
 
 The first step is to annotate the fruit images with bounding boxes and export the annotations in YOLO format.
 
@@ -63,7 +63,7 @@ This allows the model to be evaluated on a previously unseen scene with differen
 
 For more information about the annotation format, dataset structure and splitting process, see [Dataset Preparation](docs/dataset-preparation.md).
 
-## 2. Model Training & Inference
+## 4. Model Training & Inference
 
 The model used in this project is **YOLOv8n**, initialized with pretrained weights and fine-tuned on the custom five-class fruit dataset.
 
@@ -110,7 +110,7 @@ The generated prediction files are saved under `/app/runs/val_preds/`.
 
 For more information about inference settings and prediction outputs, see [Inference](docs/inference.md).
 
-## 3. Model Evaluation
+## 5. Model Evaluation
 
 The model is evaluated by comparing its predictions against the ground-truth annotations on the validation set (Scene 2). The test set (Scene 4) remains separate and is reserved for the final evaluation.
 
@@ -133,9 +133,7 @@ The visualization compares the ground-truth bounding boxes with the model's pred
 
 ### Precision-Recall Curve
 
-| Precision-Recall Curve | Localization Performance |
-|:---:|:---:|
-| <img src="assets/PR_curve.png" height="300"> | <img src="assets/class_0_pr_curves.png" height="300"> |
+![Precision-Recall Curve for Class 0 at IoU 0.5](assets/PR_curve.png)
 
 The PR curve for class 0 (Banana) shows the relationship between precision and recall at different confidence thresholds.
 
@@ -147,6 +145,44 @@ At a confidence threshold of `0.25` and an IoU threshold of `0.5`, the model ach
 
 ### Localization Performance
 
+![Class 0 Banana Precision-Recall Curves at 10 IoU Thresholds](assets/class_0_pr_curves.png)
+
 The PR curves show how detection performance changes as the IoU threshold increases. The decrease in AP at stricter thresholds indicates that the predicted bounding boxes are less consistently aligned with the ground-truth annotations when a higher overlap is required.
 
 For the full evaluation procedure, metric calculations and detailed results, see [Model Evaluation](docs/evaluation.md).
+
+## 6. Model Testing
+
+After completing the validation evaluation, the trained model is evaluated on the separate test set (Scene 4). These images were not used during training or validation and contain a different lighting environment.
+
+The purpose of this final evaluation is to assess how well the model generalizes to an unseen scene.
+
+### Test Results
+
+The custom evaluation implementation produced the following results on the test set, consisting of 65 images:
+
+| Metric | Result |
+|---|---:|
+| mAP@0.5 | 0.8202 |
+| mAP@0.5:0.95 | 0.7701 |
+
+### Ground Truth vs. Predictions
+
+![Test Ground Truth vs Predictions](assets/S4_254_comparison.jpg)
+
+This visualization compares the ground-truth bounding boxes with the model's predictions on an image from the unseen test scene. It provides an example of how the model performs under different lighting conditions.
+
+### Validation vs. Test Performance
+
+Comparing the validation and test results provides insight into how well the model generalizes to unseen data.
+
+| Metric | Validation (Scene 2) | Test (Scene 4) | Difference |
+|---|---:|---:|---:|
+| mAP@0.5 | 0.9635 | 0.8202 | -0.1433 |
+| mAP@0.5:0.95 | ~0.8800 | 0.7701 | ~-0.1099 |
+
+The model achieves lower mAP on the test set compared with the validation set. This indicates a drop in detection performance when evaluated on the unseen scene.
+
+The different lighting conditions may contribute to this difference. Nevertheless, the model achieves an mAP@0.5 of 0.8202 on the test set, showing that it can still detect fruit in an environment it has not encountered during training or validation.
+
+Overall, the comparison highlights the importance of evaluating object-detection models on unseen data rather than relying solely on validation performance.
