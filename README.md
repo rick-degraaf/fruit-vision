@@ -1,162 +1,82 @@
 # Fruit-Vision
 
-This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8** object detection model on a custom dataset inside a containerized development environment.
+This repository showcases the full end-to-end pipeline to fine-tune a **YOLOv8** object-detection model on a custom five-class fruit dataset inside a containerized development environment.
 
 ![Model Predictions with Bounding Boxes](assets/label.jpeg)
 
----
+**Technologies:** Python · Ultralytics YOLOv8 · PyTorch · NumPy · Docker · Roboflow · Visual Studio Code
 
-## 0. Prerequisites
-
-Before getting started, ensure your system meets the following requirements to support GUI/X11 forwarding and GPU-accelerated Docker containers:
-
-* **WSL2** (Windows Subsystem for Linux 2) installed and configured.
-* **Docker Desktop** installed with WSL2 integration enabled.
-* **X11 Server** running on your host machine (e.g., VcXsrv, X410, or WSLg) to allow GUI display output from the Docker container.
-* **Visual Studio Code** with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension installed.
+**Focus:** Object Detection & Evaluation
 
 ---
 
-## 1. Environment Setup
+## 1. Project Pipeline & Documentation
 
-This project uses a VS Code Dev Container to automatically configure all dependencies, CUDA drivers, and Ultralytics packages.
+The project covers the complete object-detection workflow, from setting up the development environment to evaluating the trained model.
 
-1. Clone the repository and open the folder in **VS Code**:
-   ```bash
-   git clone https://github.com/rick-degraaf/fruit-vision.git
-   cd fruit-vision
-   ```
+| Stage | Description | Documentation |
+|---|---|---|
+| **Installation** | Set up the development environment using WSL2, Docker and VS Code Dev Containers. | [Installation](docs/installation.md) |
+| **Dataset Labelling & Preparation** | Annotate images in YOLO format, organize the dataset and perform a scene-based split. | [Dataset Preparation](docs/dataset-preparation.md) |
+| **Model Training & Inference** | Fine-tune the pretrained YOLOv8n model and generate predictions on the validation set. | [Model Training](docs/training.md) · [Inference](docs/inference.md) |
+| **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) |
 
-2. Open the VS Code Command Palette (`Ctrl + Shift + P` or `Cmd + Shift + P`).
-3. Run the following command to build the environment:
-   ```text
-   Dev Containers: Rebuild and Reopen in Container
-   ```
-   > **Note:** The initial build will take several minutes as it pulls the base image and installs all required computer vision dependencies. Once complete, you will have a fully isolated and ready-to-use environment.
+## 2. Getting Started
 
----
+Clone the repository and open it in Visual Studio Code:
 
-## 2. Dataset Preparation
+```bash
+git clone https://github.com/rick-degraaf/fruit-vision.git
+cd fruit-vision
+```
 
-To fine-tune the YOLOv8 model, you need a labeled image dataset formatted specifically for YOLO.
+Open the VS Code Command Palette (`Ctrl + Shift + P`) and run:
+
+```text
+Dev Containers: Rebuild and Reopen in Container
+```
+
+The development container automatically configures the required dependencies and development environment.
+
+For the prerequisites and full installation instructions, see the [Installation Guide](docs/installation.md).
+
+## 3. Dataset Labelling & Preparation
+
+The first step is to annotate the fruit images with bounding boxes and export the annotations in YOLO format.
+
+For this project, five fruit classes are used. The annotations contain the class ID and normalized bounding-box coordinates.
 
 ### Sample Dataset Scenes
 
 | Type | Scene 1 | Scene 2 | Scene 3 | Scene 4 |
-| :--- | :---: | :---: | :---: | :---: |
+|---|:---:|:---:|:---:|:---:|
 | **Original Image** | ![Scene 1](assets/scene_1.jpeg) | ![Scene 2](assets/scene_2.jpeg) | ![Scene 3](assets/scene_3.jpeg) | ![Scene 4](assets/scene_4.jpeg) |
 | **Labelled Image** | ![Scene 1 Labelled](assets/scene_1_labelled.jpeg) | ![Scene 2 Labelled](assets/scene_2_labelled.jpeg) | ![Scene 3 Labelled](assets/scene_3_labelled.jpeg) | ![Scene 4 Labelled](assets/scene_4_labelled.jpeg) |
 
-### 2.1 Labeling Your Images
-Annotate your custom images with bounding boxes. You can do this manually using local tools (e.g., LabelImg, CVAT) or via cloud platforms like [Roboflow](https://roboflow.com/). Export your annotations in **YOLOv8 format** (`.txt` files containing `<class_id> <x_center> <y_center> <width> <height>`, with dimensions normalized by image width and height from 0-1).
+The annotated dataset is split into training, validation and test subsets. Rather than using a random split, this project uses a scene-based approach:
 
-### 2.2 Directory Structure & Dataset Splitting
+- **Training:** Scenes 1 and 3.
+- **Validation:** Scene 2.
+- **Testing:** Scene 4.
 
-To ensure a fair and unbiased evaluation of the model, the dataset is divided into three subsets: **training**, **validation**, and **testing**.
+This allows the model to be evaluated on a previously unseen scene with different lighting conditions.
 
-Rather than performing a purely random split, this project uses a **scene-based split** to evaluate how well the model generalizes to different environments and lighting conditions.
+For more information about the annotation format, dataset structure and splitting process, see [Dataset Preparation](docs/dataset-preparation.md).
 
-First, place your original dataset inside the `/data` directory, following this structure:
+## 4. Model Training & Inference
 
-```text
-data/
-├── data.yaml
-└── train/
-    ├── images/
-    └── labels/
-```
+The model used in this project is **YOLOv8n**, initialized with pretrained weights and fine-tuned on the custom five-class fruit dataset.
 
-The `images/` directory should contain the original images, while `labels/` should contain their corresponding YOLO-format annotation files.
+### Training
 
-Once the dataset is organized, run the splitting script from the project root:
+To start training inside the development container, navigate to the `/app/train` directory and run:
 
 ```bash
-python utils/generate_split.py \
-    --images_path /app/data/train/images \
-    --labels_path /app/data/train/labels \
-    --target_dir /app/data
-```
-
-**Scene-based splitting strategy**
-
-For this project, images are grouped according to their original scene:
-
-- **Training:** Scenes 1 and 3, used to train the model.
-- **Validation:** Scene 2, used to monitor model performance and guide training.
-- **Testing:** Scene 4, reserved for evaluating generalization under different lighting conditions (dark-room environment).
-
-This approach helps assess whether the model can generalize to previously unseen scenes rather than simply memorizing the conditions present in the training data.
-
-After running the script, the dataset should follow this structure:
-
-```text
-data/
-├── data.yaml
-├── images/
-│   ├── train/
-│   ├── val/
-│   └── test/
-└── labels/
-    ├── train/
-    ├── val/
-    └── test/
-```
-
-Finally, make sure that the paths specified in `data.yaml` match the generated directory structure and that the class IDs and class names are correctly mapped.
-
-> **Note:** Keep the test set separate from the training and validation processes. It should only be used for the final evaluation to provide an unbiased estimate of the model's generalization performance.
----
-
-## 3. Model Training
-
-With the dataset prepared and split into training, validation, and testing subsets, we can proceed with fine-tuning the YOLOv8 model.
-
-This project uses **YOLOv8n**, a lightweight object detection model pretrained on the COCO 2017 dataset. By fine-tuning its pretrained weights on our custom five-class fruit dataset, we adapt the model to recognize and detect the specific fruit categories of interest.
-
-### 3.1 Running the Training Script
-
-Navigate to the `/app/train` directory inside the development container and execute the training script:
-
-```bash
+cd /app/train
 python train.py
 ```
 
-The training script supports several command-line arguments to customize the training configuration. Each argument has a default value, allowing you to start training without specifying additional parameters.
-
-| Argument | Default | Description |
-| :--- | :--- | :--- |
-| `--weights` | `/app/weights/yolov8n.pt` | Path to the pretrained YOLOv8 model weights. |
-| `--data` | `/app/data/data.yaml` | Path to the dataset configuration file. |
-| `--imgsz` | `640` | Input image size used during training. |
-| `--batch` | `8` | Number of images processed per training batch. |
-| `--workers` | `2` | Number of dataloader worker processes. |
-| `--epochs` | `40` | Number of complete passes through the training dataset. |
-| `--seed` | `0` | Random seed to improve reproducibility. |
-| `--project` | `/app/runs` | Directory where training results are stored. |
-| `--name` | `baseline_yolov8n` | Name of the training run. |
-
-### 3.2 Customizing Training Parameters
-
-All training parameters can be overridden directly through command-line arguments. For example, to train for 100 epochs with a batch size of 16:
-
-```bash
-python train.py \
-    --weights /app/weights/yolov8n.pt \
-    --data /app/data/data.yaml \
-    --imgsz 640 \
-    --batch 16 \
-    --workers 4 \
-    --epochs 100 \
-    --seed 42 \
-    --project /app/runs \
-    --name experiment_01
-```
-
-### 3.3 Training Outputs
-
-Once training starts, Ultralytics automatically creates an output directory under `runs/`, containing the results of the training process.
-
-For the default configuration, the output directory is:
+The trained model weights and training results are saved under:
 
 ```text
 runs/
@@ -166,211 +86,67 @@ runs/
     │   └── last.pt
     ├── results.csv
     ├── results.png
-    ├── confusion_matrix.png
     └── ...
 ```
 
-The two most important output files are:
+The `best.pt` checkpoint is used for the subsequent inference stage.
 
-- **`best.pt`**: Model weights from the epoch with the best validation performance.
-- **`last.pt`**: Model weights from the final training epoch.
+For the training configuration and available command-line arguments, see [Model Training](docs/training.md).
 
-The training metrics and visualizations can be used to analyze model convergence, identify potential overfitting, and assess detection performance.
+### Inference
 
-The resulting `best.pt` checkpoint will be used for the subsequent evaluation and inference stages.
+After training, inference is performed on the validation images using the best model checkpoint.
 
-## 4. Inference
-
-After training, we evaluate the model to assess its detection performance, analyze its predictions, and identify potential areas for improvement.
-
-Throughout development, we use the **validation set (Scene 2)** for model evaluation and analysis. The **test set (Scene 4)** remains completely separate and is reserved for the final evaluation once the model configuration and detection thresholds have been finalized.
-
-Ultralytics provides built-in validation functionality to calculate standard object detection metrics, such as precision, recall, and mean Average Precision (mAP). However, to better understand the underlying evaluation process, this project also implements the prediction visualization and metric calculations manually in the following sections.
-
-### 4.1 Running Inference on the Validation Set
-
-Before comparing ground-truth annotations with model predictions, we first need to run inference on the validation images.
-
-Navigate to the `/app/train` directory inside the development container and execute:
+To generate predictions and save them in YOLO format with confidence scores, run:
 
 ```bash
+cd /app/train
 python inference.py --save_txt --save_conf
 ```
 
-The inference script supports the following command-line arguments:
+A low confidence threshold (`0.001`) is used to retain a large number of candidate detections. This allows the predictions to be evaluated at different confidence thresholds during the subsequent evaluation.
 
-| Argument | Default | Description |
-| :--- | :--- | :--- |
-| `--weights` | `/app/runs/baseline_yolov8n/weights/best.pt` | Path to the trained model weights. |
-| `--data` | `/app/data/images/val` | Directory containing the validation images. |
-| `--conf` | `0.001` | Minimum confidence threshold for retaining predictions. |
-| `--save_txt` | `False` | Whether to save predictions in YOLO-format `.txt` files. |
-| `--save_conf` | `False` | Whether to include confidence scores in the saved prediction files. |
-| `--project` | `/app/runs` | Directory where inference results are stored. |
-| `--name` | `val_preds` | Name of the inference run. |
+The generated prediction files are saved under `/app/runs/val_preds/`.
 
-For this project, the default configuration is sufficient. In particular, the confidence threshold is set to **0.001** to retain a large number of candidate detections.
+For more information about inference settings and prediction outputs, see [Inference](docs/inference.md).
 
-This deliberately low threshold allows us to inspect the model's raw predictions and calculate evaluation metrics across different confidence thresholds in subsequent sections, rather than filtering out potentially relevant detections too early.
+## 5. Model Evaluation
 
-### 4.2 Prediction Outputs
+The model is evaluated by comparing its predictions against the ground-truth annotations on the validation set (Scene 2). The test set (Scene 4) remains separate and is reserved for the final evaluation.
 
-After inference is complete, Ultralytics creates an output directory containing the predictions for the validation images.
+The custom evaluation implementation calculates precision, recall, F1 score, Average Precision (AP) and mean Average Precision (mAP).
 
-With the default configuration, the results are stored in:
+### Evaluation Results
 
-```text
-/app/runs/val_preds/
-```
-
-The directory contains a `.txt` file for each validation image, storing the predicted bounding boxes in YOLO format.
-
-Each prediction contains the following information:
-
-```text
-<class_id> <x_center> <y_center> <width> <height> <confidence>
-```
-
-The bounding box coordinates are normalized relative to the image dimensions. Confidence scores are included when the `--save_conf` argument is enabled.
-
-### 4.3 Visualizing Ground Truth vs. Predictions
-
-To inspect the model's predictions, we can visualize the ground-truth bounding boxes alongside the predicted bounding boxes.
-
-This can be done using the visualization script:
-
-```bash
-python /app/utils/visualize_bbox_GT_vs_Pred.py
-```
-
-The script compares the original annotations with the predictions generated during the previous inference step.
-
-**Ground Truth vs. Model Predictions**
-
-![Ground Truth vs Predictions](assets/GT_vs_Pred.jpg)
-
-The visualization shows the ground-truth bounding boxes on the left and the model's predicted bounding boxes on the right.
-
-As can be observed, the predicted bounding boxes may initially appear cluttered, with multiple overlapping detections and false positives.
-
-This is expected because inference was performed using a very low confidence threshold (`0.001`). Consequently, many low-confidence candidate detections are retained instead of being filtered out.
-
-In the following sections, we will use these predictions to implement and analyze the evaluation metrics manually, including confidence-based filtering and the matching of predicted bounding boxes against ground-truth annotations.
-
-This provides a better understanding of how object detection performance is measured and how metrics such as precision, recall, and mAP are obtained.
-
-## 5. Model Evaluation: TP, FP, FN, Precision, Recall, F1 Score and mAP
-
-The model is evaluated by comparing its predictions against the ground-truth (GT) labels in the validation dataset.
-
-### 5.1 True Positives, False Positives and False Negatives
-
-Each prediction is compared with the GT bounding boxes of the same class. A prediction is considered correct if its Intersection over Union (IoU) with an unmatched GT box is at least 0.5.
-
-- **True Positive (TP):** A prediction correctly matches a GT object.
-- **False Positive (FP):** A prediction does not match any available GT object, or it is a duplicate detection.
-- **False Negative (FN):** A GT object that was not detected by the model.
-
-For class 0 (Banana), the evaluation produced the following results across the validation dataset, using an IoU threshold of 0.5 and a confidence threshold of 0.25.
+The custom evaluation implementation produced the following validation results:
 
 | Metric | Result |
 |---|---:|
-| True Positives (TP) | 57 |
-| False Positives (FP) | 5 |
-| False Negatives (FN) | 4 |
-| Total GT objects | 61 |
-| Total predictions | 62 |
+| mAP@0.5 | 0.9635 |
+| mAP@0.5:0.95 | ~0.8800 |
 
-### 5.2 Precision and Recall
+### Ground Truth vs. Predictions
 
-**Precision** measures how many of the model's predictions were correct.
+![Ground Truth vs Predictions](assets/GT_vs_Pred.jpg)
 
-```text
-Precision = TP / (TP + FP)
-          = 57 / (57 + 5)
-          = 0.9194 (91.94%)
-```
+The visualization compares the ground-truth bounding boxes with the model's predicted bounding boxes. Although the model detects the majority of the objects, some overlapping detections and false positives remain.
 
-**Recall** measures how many of the actual objects were successfully detected.
-
-```text
-Recall = TP / (TP + FN)
-       = 57 / (57 + 4)
-       = 0.9344 (93.44%)
-```
-
-For class 0, the model correctly detected 91.94% of its banana predictions and detected 93.44% of all ground-truth bananas at the selected confidence threshold.
-
-### 5.3 F1 Score
-
-The F1 score combines precision and recall into a single metric. It is the harmonic mean of precision and recall and provides a balance between the two.
-
-```text
-F1 = 2 * (Precision * Recall) / (Precision + Recall)
-   = 2 * (0.9194 * 0.9344) / (0.9194 + 0.9344)
-   = 0.9268 (92.68%)
-```
-
-A higher F1 score indicates a better balance between precision and recall. The confidence threshold that produces the highest F1 score can be selected when the goal is to balance false positives and false negatives.
-
-The threshold that maximizes F1 is not necessarily the best choice for every application. If false positives or missed detections are more costly, the confidence threshold may need to be adjusted accordingly.
-
-### 5.4 Precision-Recall Curve
-
-A Precision-Recall (PR) curve illustrates the relationship between precision and recall at different confidence thresholds.
-
-As the confidence threshold changes, the number of predictions included in the evaluation also changes. This affects both precision and recall.
-
-The curve is generated by sorting predictions by confidence and calculating cumulative TP and FP values. Recall is calculated using the total number of GT objects.
-
-The following graph shows the PR curve for class 0 (Banana), using an IoU threshold of 0.5.
+### Precision-Recall Curve
 
 ![Precision-Recall Curve for Class 0 at IoU 0.5](assets/PR_curve.png)
 
-The highlighted point represents the model's performance at a confidence threshold of 0.25:
+The PR curve for class 0 (Banana) shows the relationship between precision and recall at different confidence thresholds.
+
+At a confidence threshold of `0.25` and an IoU threshold of `0.5`, the model achieves:
 
 - **Precision:** 0.9194
 - **Recall:** 0.9344
 - **F1 score:** 0.9268
 
-### 5.5 Average Precision (AP)
-
-Average Precision (AP) summarizes the Precision-Recall curve as a single value.
-
-The AP is calculated by first creating a precision envelope, where each precision value is replaced by the maximum precision observed at that recall level or any higher recall level. The area under this interpolated curve is then calculated.
-
-For class 0 (Banana), the AP at an IoU threshold of 0.5 is:
-
-```text
-AP@0.5 = 0.9547
-```
-
-### 5.6 Mean Average Precision (mAP)
-
-Mean Average Precision (mAP) is calculated by averaging the AP values across all classes.
-
-Two evaluation metrics are used:
-
-- **mAP@0.5:** AP is calculated using an IoU threshold of 0.5.
-- **mAP@0.5:0.95:** AP is calculated at ten IoU thresholds, from 0.50 to 0.95 in increments of 0.05, and then averaged.
-
-The mAP@0.5:0.95 metric is stricter because it also evaluates how accurately the model localizes objects at higher IoU thresholds.
-
-Using the custom evaluation implementation, the overall results were:
-
-| Metric | Result |
-|---|---:|
-| mAP@0.5 | 0.9635 |
-| mAP@0.5:0.95 | 0.8800 |
-
-### 5.7 Precision-Recall Curves at Different IoU Thresholds
-
-To further evaluate localization accuracy, PR curves are generated for class 0 (Banana) at ten different IoU thresholds, ranging from 0.50 to 0.95.
-
-Each curve represents a different IoU threshold, and its corresponding AP is shown in the legend.
+### Localization Performance
 
 ![Class 0 Banana Precision-Recall Curves at 10 IoU Thresholds](assets/class_0_pr_curves.png)
 
-As the IoU threshold increases, the model needs to predict increasingly accurate bounding boxes to achieve a true positive.
+The PR curves show how detection performance changes as the IoU threshold increases. The decrease in AP at stricter thresholds indicates that the predicted bounding boxes are less consistently aligned with the ground-truth annotations when a higher overlap is required.
 
-This allows us to evaluate not only whether the model detects the correct object, but also how accurately it localizes that object.
+For the full evaluation procedure, metric calculations and detailed results, see [Model Evaluation](docs/evaluation.md).
