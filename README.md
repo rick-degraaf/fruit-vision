@@ -21,7 +21,7 @@ The project covers the complete object-detection workflow, from setting up the d
 | **Model Training & Inference** | Fine-tune the pretrained YOLOv8n model and generate predictions on the validation set. | [Model Training](docs/training.md) · [Inference](docs/inference.md) |
 | **Model Evaluation** | Compare predictions against ground-truth annotations and calculate object-detection metrics. | [Model Evaluation](docs/evaluation.md) · [Model Testing](docs/testing.md) |
 
-## 0. Getting Started
+## Getting Started
 
 Clone the repository and open it in Visual Studio Code:
 

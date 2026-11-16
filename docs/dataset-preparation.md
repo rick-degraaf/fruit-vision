@@ -64,6 +64,6 @@ python utils/generate_split.py \
     --target_dir /app/data
 ```
 
-The script uses the images and corresponding annotation files to create the dataset structure used for training and validation.
+The script uses the images and corresponding annotation files to create the dataset splits. Scenes 1 and 3 are used for training, Scene 2 for validation, and Scene 4 is kept separate for final testing.
 
 For the exact split configuration and generated output, refer to the script in `utils/generate_split.py`.
